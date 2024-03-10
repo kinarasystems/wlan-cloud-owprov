@@ -48,6 +48,7 @@ namespace OpenWifi {
 
     void AutoDiscovery::ProcessConnect(const Poco::JSON::Object::Ptr &P, std::string &FW, std::string &SN,
                                        std::string &Compat, std::string &Conn, std::string &locale) {
+        std::cout << "##################################### In process connect" << std::endl;
         if (P->has(uCentralProtocol::CONNECTIONIP))
             Conn = P->get(uCentralProtocol::CONNECTIONIP).toString();
         if (P->has(uCentralProtocol::FIRMWARE))
@@ -62,6 +63,8 @@ namespace OpenWifi {
             if (CapObj->has(uCentralProtocol::COMPATIBLE))
                 Compat = CapObj->get(uCentralProtocol::COMPATIBLE).toString();
         }
+        std::cout << "##################################### Finished with process connect" << std::endl;
+        std::cout << "##################################### SN: " << SN << std::endl;
     }
 
     void AutoDiscovery::ProcessDisconnect(const Poco::JSON::Object::Ptr &P, [[maybe_unused]] std::string &FW,
@@ -76,9 +79,11 @@ namespace OpenWifi {
     void AutoDiscovery::run() {
 		Poco::AutoPtr<Poco::Notification> Note(Queue_.waitDequeueNotification());
 		Utils::SetThreadName("auto-discovery");
+        std::cout << "##################################### Starting run" << std::endl;
 		while (Note && Running_) {
 			auto Msg = dynamic_cast<DiscoveryMessage *>(Note.get());
 			if (Msg != nullptr) {
+                std::cout << "##################################### Received a message" << std::endl;
 				try {
 					Poco::JSON::Parser Parser;
 					auto Object = Parser.parse(Msg->Payload()).extract<Poco::JSON::Object::Ptr>();
@@ -91,6 +96,7 @@ namespace OpenWifi {
                             auto PingObj = PayloadObj->getObject("ping");
                             ProcessPing(PingObj, Firmware, SerialNumber, Compatible, ConnectedIP, Locale);
                         } else if(PayloadObj->has("capabilities")) {
+                            std::cout << "#####################################Object has capabilities" << std::endl;
                             ProcessConnect(PayloadObj, Firmware, SerialNumber, Compatible, ConnectedIP, Locale);
                         } else if(PayloadObj->has("disconnection")) {
                             //  we ignore disconnection in provisioning
@@ -101,6 +107,7 @@ namespace OpenWifi {
                         }
 
                         if (!SerialNumber.empty() && Connected) {
+                            std::cout << "##################################### SN is not empty" << std::endl;
                             StorageService()->InventoryDB().CreateFromConnection(
                                     SerialNumber, ConnectedIP, Compatible, Locale);
                         }
