@@ -44,10 +44,22 @@ namespace OpenWifi {
 		//
 		inline static std::string EncodeAllErrors(std::vector<std::string> Errors) {
 			if (!Errors.empty()) {
-				const char* const delim = ", ";
-				std::ostringstream allErrors;
-				std::copy(Errors.begin(), Errors.end(), std::ostream_iterator<std::string>(allErrors, delim));
-				return std::string(allErrors.str());
+				// verify that Errors contains non-empty error
+				bool valid_errors = false;
+				std::vector<std::string>::iterator it = Errors.begin();
+				while (it != Errors.end()) {
+					if (!(*it).empty()) {
+						valid_errors = true;
+					}
+					it++;
+				}
+				if (valid_errors) {
+					// encode errors
+					const char* const delim = ", ";
+					std::ostringstream allErrors;
+					std::copy(Errors.begin(), Errors.end(), std::ostream_iterator<std::string>(allErrors, delim));
+					return std::string(allErrors.str());
+				}
 			}
 			return std::string("unknown");
 		}
