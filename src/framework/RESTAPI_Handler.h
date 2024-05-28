@@ -68,11 +68,11 @@ namespace OpenWifi {
 			size_t  pos = 0;
 			int     count = 0;
 
-			while( count != nth )
+			while(count != nth)
 			{
 				pos+=1;
 				pos = str.find(findMe, pos);
-				if ( pos == std::string::npos )
+				if (pos == std::string::npos)
 					return -1;
 				count++;
 			}
