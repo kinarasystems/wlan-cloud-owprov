@@ -61,6 +61,10 @@ namespace OpenWifi {
 			  TransactionId_(TransactionId) {}
 		
 		inline int nthOccurrence(const std::string& str, const std::string& findMe, int nth) {
+			/*
+			Helper function to get the index of the nth occurence of string findMe in string str.
+			if there are not n occurrences of findMe in str, returns -1.
+			*/
 			size_t  pos = 0;
 			int     count = 0;
 
