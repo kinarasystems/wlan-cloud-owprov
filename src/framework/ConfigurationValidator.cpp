@@ -28,7 +28,6 @@ static const std::vector<std::string> GitJSONSchemaURLs = {
 };
 
 static std::string DefaultAPSchema = R"foo(
-
 {
     "$id": "https://openwrt.org/ucentral.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -354,14 +353,6 @@ static std::string DefaultAPSchema = R"foo(
                         10000
                     ]
                 },
-                "duplex": {
-                    "description": "The duplex mode that shall be forced.",
-                    "type": "string",
-                    "enum": [
-                        "half",
-                        "full"
-                    ]
-                },
                 "enabled": {
                     "description": "This allows forcing the port to down state by default.",
                     "type": "boolean",
@@ -490,7 +481,59 @@ static std::string DefaultAPSchema = R"foo(
                 "bss-color": {
                     "description": "This enables BSS Coloring on the PHY. setting it to 0 disables the feature 1-63 sets the color and 64 will make hostapd pick a random color.",
                     "type": "integer",
-                    "default": 64
+                    "minimum": 0,
+                    "maximum": 64,
+                    "default": 0
+                }
+            }
+        },
+        "radio.he-6ghz": {
+            "type": "object",
+            "properties": {
+                "power-type": {
+                    "description": "This config is to set the 6 GHz Access Point type",
+                    "type": "string",
+                    "enum": [
+                        "indoor-power-indoor",
+                        "standard-power",
+                        "very-low-power"
+                    ],
+                    "default": "very-low-power"
+                },
+                "controller": {
+                    "description": "The URL of the AFC controller that the AP shall connect to.",
+                    "type": "string"
+                },
+                "ca-certificate": {
+                    "description": "The CA of the server. This enables mTLS.",
+                    "type": "string",
+                    "format": "uc-base64"
+                },
+                "serial-number": {
+                    "description": "The serial number that the AP shall send to the AFC controller.",
+                    "type": "string"
+                },
+                "certificate-ids": {
+                    "description": "The certificate IDs that the AP shall send to the AFC controller.",
+                    "type": "string"
+                },
+                "minimum-power": {
+                    "description": "The minimum power that the AP shall request from to the AFC controller.",
+                    "type": "number"
+                },
+                "frequency-ranges": {
+                    "description": "The list of frequency ranges that the AP shall request from to the AFC controller.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "operating-classes": {
+                    "description": "The list of frequency ranges that the AP shall request from to the AFC controller.",
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
                 }
             }
         },
@@ -634,6 +677,9 @@ static std::string DefaultAPSchema = R"foo(
                 },
                 "he-settings": {
                     "$ref": "#/$defs/radio.he"
+                },
+                "he-6ghz-settings": {
+                    "$ref": "#/$defs/radio.he-6ghz"
                 },
                 "hostapd-iface-raw": {
                     "description": "This array allows passing raw hostapd.conf lines.",
@@ -784,8 +830,19 @@ static std::string DefaultAPSchema = R"foo(
                 },
                 "use-dns": {
                     "description": "The DNS server sent to clients as DHCP option 6.",
-                    "type": "string",
-                    "format": "uc-ip"
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "format": "ipv4"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "ipv4"
+                            }
+                        }
+                    ]
                 }
             }
         },
@@ -1313,8 +1370,7 @@ static std::string DefaultAPSchema = R"foo(
                 "domain-identifier": {
                     "description": "Mobility Domain identifier (dot11FTMobilityDomainID, MDID).",
                     "type": "string",
-                    "maxLength": 4,
-                    "minLength": 4,
+                    "format": "uc-mobility",
                     "examples": [
                         "abcd"
                     ]
@@ -3701,6 +3757,42 @@ static std::string DefaultAPSchema = R"foo(
                 }
             }
         },
+        "service.fingerprint": {
+            "description": "This section can be used to configure device fingerprinting.",
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "description": "Enable this option if you would like to enable the MDNS server on the unit.",
+                    "type": "string",
+                    "enum": [
+                        "polled",
+                        "final",
+                        "raw-data"
+                    ],
+                    "default": "final"
+                },
+                "minimum-age": {
+                    "description": "The minimum age a fingerprint must have before it is reported.",
+                    "type": "number",
+                    "default": 60
+                },
+                "maximum-age": {
+                    "description": "The age at which fingerprints get flushed from the local state.",
+                    "type": "number",
+                    "default": 60
+                },
+                "periodicity": {
+                    "description": "This value defines the period at which entries get reported.",
+                    "type": "number",
+                    "default": 600
+                },
+                "allow-wan": {
+                    "description": "Allow fingerprinting devices found on the WAN port.",
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        },
         "service": {
             "description": "This section describes all of the services that may be present on the AP. Each service is then referenced via its name inside an interface, ssid, ...",
             "type": "object",
@@ -3770,6 +3862,9 @@ static std::string DefaultAPSchema = R"foo(
                 },
                 "rrm": {
                     "$ref": "#/$defs/service.rrm"
+                },
+                "fingerprint": {
+                    "$ref": "#/$defs/service.fingerprint"
                 }
             }
         },
