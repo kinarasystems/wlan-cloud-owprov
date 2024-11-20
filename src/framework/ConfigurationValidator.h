@@ -47,7 +47,10 @@ namespace OpenWifi {
 				const char* const delim = ", ";
 				std::ostringstream allErrors;
 				std::copy(Errors.begin(), Errors.end(), std::ostream_iterator<std::string>(allErrors, delim));
-				return std::string(allErrors.str());
+				std::string ret_str = std::string(allErrors.str());
+				if (!ret_str.empty()) {
+					return ret_str;
+				}
 			}
 			return std::string("unknown");
 		}
