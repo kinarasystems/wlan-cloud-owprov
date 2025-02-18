@@ -3,6 +3,7 @@
 //
 
 #include "SDK_gw.h"
+#include <unistd.h>
 
 #include "framework/MicroServiceNames.h"
 #include "framework/OpenAPIRequests.h"
@@ -153,6 +154,19 @@ namespace OpenWifi::SDK::GW {
 				R.Do(CallResponse, client ? client->UserInfo_.webtoken.access_token_ : "");
 			if (ResponseStatus == Poco::Net::HTTPResponse::HTTP_OK) {
 				return true;
+			}
+			else {
+				// Sleep to wait for GW to create device entry in DB.
+				// Then retry request.
+				sleep(30);
+				auto ResponseStatus =
+				R.Do(CallResponse, client ? client->UserInfo_.webtoken.access_token_ : "");
+				if (ResponseStatus == Poco::Net::HTTPResponse::HTTP_OK) {
+					return true;
+				}
+				else {
+					return false;
+				}
 			}
 			return false;
 		}
